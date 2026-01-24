@@ -1,0 +1,9 @@
+{
+	"name": "datafdemo2401",
+	"location": "southindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f510331a-cc90-4d1a-bb42-8be29bc5df1e",
+		"tenantId": "dfe7e9b7-5994-49bd-b530-02325e9a6c4d"
+	}
+}
