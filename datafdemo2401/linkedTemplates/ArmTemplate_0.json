@@ -319,7 +319,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataset": {
-								"referenceName": "Json2",
+								"referenceName": "ADLSSourceLinkedService",
 								"type": "DatasetReference",
 								"parameters": {}
 							},
@@ -335,7 +335,7 @@
 								"enablePartitionDiscovery": false
 							},
 							"formatSettings": {
-								"type": "JsonReadSettings"
+								"type": "DelimitedTextReadSettings"
 							}
 						}
 					}
@@ -346,7 +346,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Json2')]"
+				"[concat(variables('factoryId'), '/datasets/ADLSSourceLinkedService')]"
 			]
 		},
 		{
