@@ -1,0 +1,43 @@
+{
+	"name": "CustomerJson",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": "targetcontainer240126"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"transaction_id": {
+					"type": "string"
+				},
+				"customer_id": {
+					"type": "string"
+				},
+				"transaction_date": {
+					"type": "string"
+				},
+				"product": {
+					"type": "string"
+				},
+				"amount": {
+					"type": "string"
+				},
+				"payment_mode": {
+					"type": "string"
+				},
+				"city": {
+					"type": "string"
+				}
+			}
+		}
+	}
+}
