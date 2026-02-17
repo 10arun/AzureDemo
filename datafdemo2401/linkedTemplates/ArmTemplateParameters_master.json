@@ -11,11 +11,23 @@
 		"AzureDataLakeStorage2_accountKey": {
 			"value": ""
 		},
+		"SinkSQLLink_password": {
+			"value": ""
+		},
 		"AzureDataLakeStorage1_properties_typeProperties_url": {
 			"value": "https://storageazurelearning2301.dfs.core.windows.net/"
 		},
 		"AzureDataLakeStorage2_properties_typeProperties_url": {
 			"value": "https://storageazurelearning2301.dfs.core.windows.net/"
+		},
+		"SinkSQLLink_properties_typeProperties_server": {
+			"value": "demodatabasecustomer.database.windows.net"
+		},
+		"SinkSQLLink_properties_typeProperties_database": {
+			"value": "dbdemocustomer"
+		},
+		"SinkSQLLink_properties_typeProperties_userName": {
+			"value": "admin17022026"
 		},
 		"containerUri": {
 			"value": ""
