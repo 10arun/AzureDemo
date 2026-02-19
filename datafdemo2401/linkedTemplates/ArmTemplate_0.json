@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage2'"
 		},
+		"DataBricksToAzureDataFactory_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'DataBricksToAzureDataFactory'"
+		},
 		"SinkSQLLink_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'SinkSQLLink'"
@@ -26,6 +30,10 @@
 		"AzureDataLakeStorage2_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://storageazurelearning2301.dfs.core.windows.net/"
+		},
+		"DataBricksToAzureDataFactory_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0219-125730-vg2i3btn"
 		},
 		"SinkSQLLink_properties_typeProperties_server": {
 			"type": "string",
@@ -79,6 +87,24 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DataBricksToAzureDataFactory')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-7405616996326139.19.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('DataBricksToAzureDataFactory_accessToken')]"
+					},
+					"existingClusterId": "[parameters('DataBricksToAzureDataFactory_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/SinkSQLLink')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -99,6 +125,42 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Notebook1",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/lethaltkc@gmail.com/NotebookADF1"
+						},
+						"linkedServiceName": {
+							"referenceName": "DataBricksToAzureDataFactory",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataBricksToAzureDataFactory')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/ADLSSourceLinkedService')]",
@@ -158,6 +220,152 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlIncremented')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SinkSQLLink",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Index",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "CustomerId",
+						"type": "nvarchar"
+					},
+					{
+						"name": "FirstName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Company",
+						"type": "nvarchar"
+					},
+					{
+						"name": "City",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Country",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Phone1",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Email",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SubscriptionDate",
+						"type": "date"
+					},
+					{
+						"name": "Website",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "CustomerDetails_Target"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SinkSQLLink')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlSource')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SinkSQLLink",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Index",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "CustomerId",
+						"type": "nvarchar"
+					},
+					{
+						"name": "FirstName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Company",
+						"type": "nvarchar"
+					},
+					{
+						"name": "City",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Country",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Phone1",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Email",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SubscriptionDate",
+						"type": "date"
+					},
+					{
+						"name": "Website",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "CustomerDetails_Source"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SinkSQLLink')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/AzureSqlTable1')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -208,6 +416,79 @@
 				"typeProperties": {
 					"schema": "dbo",
 					"table": "CustomerTransactions"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SinkSQLLink')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTarget')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SinkSQLLink",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Index",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "CustomerId",
+						"type": "nvarchar"
+					},
+					{
+						"name": "FirstName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Company",
+						"type": "nvarchar"
+					},
+					{
+						"name": "City",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Country",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Phone1",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Email",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SubscriptionDate",
+						"type": "date"
+					},
+					{
+						"name": "Website",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "CustomerDetails_Target"
 				}
 			},
 			"dependsOn": [
@@ -643,259 +924,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DelimitedText3')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDataLakeStorage1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "customer_transaction_raw.csv",
-						"fileSystem": "democontainer2301"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "transaction_id",
-						"type": "String"
-					},
-					{
-						"name": "customer_id",
-						"type": "String"
-					},
-					{
-						"name": "transaction_date",
-						"type": "String"
-					},
-					{
-						"name": "product",
-						"type": "String"
-					},
-					{
-						"name": "amount",
-						"type": "String"
-					},
-					{
-						"name": "payment_mode",
-						"type": "String"
-					},
-					{
-						"name": "city",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DelimitedText4')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDataLakeStorage1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": "democontainer2301"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "transaction_id",
-						"type": "String"
-					},
-					{
-						"name": "customer_id",
-						"type": "String"
-					},
-					{
-						"name": "transaction_date",
-						"type": "String"
-					},
-					{
-						"name": "product",
-						"type": "String"
-					},
-					{
-						"name": "amount",
-						"type": "String"
-					},
-					{
-						"name": "payment_mode",
-						"type": "String"
-					},
-					{
-						"name": "city",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DelimitedText5')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDataLakeStorage1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": "democontainer2301"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "transaction_id",
-						"type": "String"
-					},
-					{
-						"name": "customer_id",
-						"type": "String"
-					},
-					{
-						"name": "transaction_date",
-						"type": "String"
-					},
-					{
-						"name": "product",
-						"type": "String"
-					},
-					{
-						"name": "amount",
-						"type": "String"
-					},
-					{
-						"name": "payment_mode",
-						"type": "String"
-					},
-					{
-						"name": "city",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DelimitedText6')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDataLakeStorage1",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"filename": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": "democontainer2301"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "transaction_id",
-						"type": "String"
-					},
-					{
-						"name": "customer_id",
-						"type": "String"
-					},
-					{
-						"name": "transaction_date",
-						"type": "String"
-					},
-					{
-						"name": "product",
-						"type": "String"
-					},
-					{
-						"name": "amount",
-						"type": "String"
-					},
-					{
-						"name": "payment_mode",
-						"type": "String"
-					},
-					{
-						"name": "city",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Json3')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDataLakeStorage2",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Json",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": "targetcontainer240126"
-					}
-				},
-				"schema": {}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
 			]
 		}
 	]

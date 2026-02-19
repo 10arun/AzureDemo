@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage2'"
 		},
+		"DataBricksToAzureDataFactory_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'DataBricksToAzureDataFactory'"
+		},
 		"SinkSQLLink_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'SinkSQLLink'"
@@ -26,6 +30,10 @@
 		"AzureDataLakeStorage2_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://storageazurelearning2301.dfs.core.windows.net/"
+		},
+		"DataBricksToAzureDataFactory_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0219-125730-vg2i3btn"
 		},
 		"SinkSQLLink_properties_typeProperties_server": {
 			"type": "string",
@@ -292,6 +300,109 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/CustomerCopydata')]",
 				"[concat(variables('factoryId'), '/datasets/CustomerJson')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/IncrementalLoad')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "select max(ModifiedDate) as date1 from [dbo].[CustomerDetails_Target]\n\n",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AzureSqlTarget",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Lookup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "@concat('select * from [dbo].[CustomerDetails_Source] where \nModifiedDate > ''',activity('Lookup').output.firstRow.date1, '''\n')",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "AzureSqlSource",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "AzureSqlIncremented",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AzureSqlTarget')]",
+				"[concat(variables('factoryId'), '/datasets/AzureSqlSource')]",
+				"[concat(variables('factoryId'), '/datasets/AzureSqlIncremented')]"
 			]
 		},
 		{
@@ -619,6 +730,42 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Notebook1",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/lethaltkc@gmail.com/NotebookADF1"
+						},
+						"linkedServiceName": {
+							"referenceName": "DataBricksToAzureDataFactory",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataBricksToAzureDataFactory')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ADLSSourceLinkedService')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -676,6 +823,152 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlIncremented')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SinkSQLLink",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Index",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "CustomerId",
+						"type": "nvarchar"
+					},
+					{
+						"name": "FirstName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Company",
+						"type": "nvarchar"
+					},
+					{
+						"name": "City",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Country",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Phone1",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Email",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SubscriptionDate",
+						"type": "date"
+					},
+					{
+						"name": "Website",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "CustomerDetails_Target"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SinkSQLLink')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlSource')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SinkSQLLink",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Index",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "CustomerId",
+						"type": "nvarchar"
+					},
+					{
+						"name": "FirstName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Company",
+						"type": "nvarchar"
+					},
+					{
+						"name": "City",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Country",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Phone1",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Email",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SubscriptionDate",
+						"type": "date"
+					},
+					{
+						"name": "Website",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "CustomerDetails_Source"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SinkSQLLink')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/AzureSqlTable1')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -726,6 +1019,79 @@
 				"typeProperties": {
 					"schema": "dbo",
 					"table": "CustomerTransactions"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SinkSQLLink')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTarget')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SinkSQLLink",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Index",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "CustomerId",
+						"type": "nvarchar"
+					},
+					{
+						"name": "FirstName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Company",
+						"type": "nvarchar"
+					},
+					{
+						"name": "City",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Country",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Phone1",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Email",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SubscriptionDate",
+						"type": "date"
+					},
+					{
+						"name": "Website",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "CustomerDetails_Target"
 				}
 			},
 			"dependsOn": [
@@ -1542,6 +1908,24 @@
 						"type": "SecureString",
 						"value": "[parameters('AzureDataLakeStorage2_accountKey')]"
 					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DataBricksToAzureDataFactory')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-7405616996326139.19.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('DataBricksToAzureDataFactory_accessToken')]"
+					},
+					"existingClusterId": "[parameters('DataBricksToAzureDataFactory_properties_typeProperties_existingClusterId')]"
 				}
 			},
 			"dependsOn": []

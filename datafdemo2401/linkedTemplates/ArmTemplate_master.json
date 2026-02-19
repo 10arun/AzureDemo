@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage2'"
 		},
+		"DataBricksToAzureDataFactory_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'DataBricksToAzureDataFactory'"
+		},
 		"SinkSQLLink_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'SinkSQLLink'"
@@ -26,6 +30,10 @@
 		"AzureDataLakeStorage2_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://storageazurelearning2301.dfs.core.windows.net/"
+		},
+		"DataBricksToAzureDataFactory_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0219-125730-vg2i3btn"
 		},
 		"SinkSQLLink_properties_typeProperties_server": {
 			"type": "string",
@@ -72,6 +80,9 @@
 					"AzureDataLakeStorage2_accountKey": {
 						"value": "[parameters('AzureDataLakeStorage2_accountKey')]"
 					},
+					"DataBricksToAzureDataFactory_accessToken": {
+						"value": "[parameters('DataBricksToAzureDataFactory_accessToken')]"
+					},
 					"SinkSQLLink_password": {
 						"value": "[parameters('SinkSQLLink_password')]"
 					},
@@ -80,6 +91,9 @@
 					},
 					"AzureDataLakeStorage2_properties_typeProperties_url": {
 						"value": "[parameters('AzureDataLakeStorage2_properties_typeProperties_url')]"
+					},
+					"DataBricksToAzureDataFactory_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('DataBricksToAzureDataFactory_properties_typeProperties_existingClusterId')]"
 					},
 					"SinkSQLLink_properties_typeProperties_server": {
 						"value": "[parameters('SinkSQLLink_properties_typeProperties_server')]"
